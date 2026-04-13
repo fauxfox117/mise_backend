@@ -1,11 +1,13 @@
 require("dotenv").config();
 
+const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const { errors } = require("celebrate");
 
 const routes = require("./routes/index");
+const { initSocketServer } = require("./sockets");
 const { NOT_FOUND } = require("./utils/errors");
 const errorHandler = require("./middlewares/error-handler");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
@@ -18,11 +20,13 @@ const {
   CORS_ORIGIN = "http://localhost:3000",
 } = process.env;
 
+const corsOrigins = CORS_ORIGIN.split(",").map((origin) => origin.trim());
+
 mongoose.connect(MONGODB_URI);
 
 app.use(
   cors({
-    origin: CORS_ORIGIN.split(",").map((origin) => origin.trim()),
+    origin: corsOrigins,
     credentials: true,
   }),
 );
@@ -46,7 +50,11 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+initSocketServer(server, corsOrigins);
+
+server.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Mise backend listening on port ${PORT}`);
 });

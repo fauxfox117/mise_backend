@@ -25,7 +25,17 @@ const validateAuthentication = celebrate({
   }),
 });
 
+const validateTableStatusUpdate = celebrate({
+  params: Joi.object().keys({
+    tableId: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    status: Joi.string().valid("open", "occupied", "reserved", "dirty").required(),
+  }),
+});
+
 module.exports = {
   validateUserBody,
   validateAuthentication,
+  validateTableStatusUpdate,
 };

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const { JWT_SECRET } = require("../utils/config");
+const { JWT_SECRET, DEMO_AUTH, DEMO_USER_ID } = require("../utils/config");
 
 const UnauthorizedError = require("../errors/unauthorized-err");
 const ConflictError = require("../errors/conflict-err");
@@ -30,6 +30,14 @@ const createUser = (req, res, next) => {
 };
 
 const login = (req, res, next) => {
+  if (DEMO_AUTH) {
+    const token = jwt.sign({ id: DEMO_USER_ID }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    return res.send({ token });
+  }
+
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -54,6 +62,15 @@ const login = (req, res, next) => {
 };
 
 const getCurrentUser = (req, res, next) => {
+  if (DEMO_AUTH) {
+    return res.send({
+      _id: DEMO_USER_ID,
+      name: "Demo User",
+      email: "demo@mise.local",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e",
+    });
+  }
+
   User.findById(req.user.id)
     .orFail()
     .then((user) => res.send(user))

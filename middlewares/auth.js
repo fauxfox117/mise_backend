@@ -1,8 +1,13 @@
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../utils/config");
+const { JWT_SECRET, DEMO_AUTH, DEMO_USER_ID } = require("../utils/config");
 const UnauthorizedError = require("../errors/unauthorized-err");
 
 module.exports = (req, res, next) => {
+  if (DEMO_AUTH) {
+    req.user = { id: DEMO_USER_ID };
+    return next();
+  }
+
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith("Bearer ")) {
