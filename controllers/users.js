@@ -71,7 +71,7 @@ const getCurrentUser = (req, res, next) => {
     });
   }
 
-  User.findById(req.user.id)
+  return User.findById(req.user.id)
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
