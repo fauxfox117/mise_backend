@@ -1,5 +1,7 @@
 const BadRequestError = require("../errors/bad-request-err");
 const { loadToastCredentials } = require("./toast-credentials");
+const { DEMO_AUTH } = require("./config");
+const { getAllTableStatuses } = require("../data/table-status-store");
 
 const STATUS_MAP = {
   AVAILABLE: "open",
@@ -211,6 +213,42 @@ const toFloorplanTables = (rawItems) => {
     .filter((item) => item.tableId);
 };
 
+const buildDemoUpdates = () =>
+  getAllTableStatuses().map((table) => ({
+    tableId: String(table.tableId),
+    status: normalizeStatus(table.status) || "open",
+  }));
+
+const buildDemoFloorplan = () => {
+  const demoTables = getAllTableStatuses().map((table, index) => ({
+    tableId: String(table.tableId),
+    label: String(table.tableId),
+    status: normalizeStatus(table.status) || "open",
+    x: 40 + (index % 5) * 120,
+    y: 40 + Math.floor(index / 5) * 90,
+    width: 96,
+    height: 64,
+    shape: "rectangle",
+    rotation: 0,
+    seats: null,
+    section: "Main Dining",
+  }));
+
+  return {
+    width: 800,
+    height: 520,
+    tables: demoTables,
+  };
+};
+
+const isPlaceholderGuid = (restaurantGuid) => {
+  if (!restaurantGuid) {
+    return true;
+  }
+
+  return String(restaurantGuid).toUpperCase().includes("YOUR-RESTAURANT-GUID");
+};
+
 const getToastAccessToken = async (credentials) => {
   const tokenUrl =
     credentials.tokenUrl ||
@@ -249,6 +287,10 @@ const fetchToastTableUpdates = async () => {
     restaurantGuid = "",
   } = credentials;
 
+  if (DEMO_AUTH && isPlaceholderGuid(restaurantGuid)) {
+    return buildDemoUpdates();
+  }
+
   if (!clientId || !clientSecret) {
     throw new BadRequestError(
       "Toast credentials are missing clientId or clientSecret",
@@ -259,33 +301,41 @@ const fetchToastTableUpdates = async () => {
     throw new BadRequestError("Toast credentials must include tablesUrl");
   }
 
-  const accessToken = await getToastAccessToken(credentials);
+  try {
+    const accessToken = await getToastAccessToken(credentials);
 
-  const response = await fetch(tablesUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Toast-Restaurant-External-ID": restaurantGuid,
-      "Content-Type": "application/json",
-    },
-  });
+    const response = await fetch(tablesUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Toast-Restaurant-External-ID": restaurantGuid,
+        "Content-Type": "application/json",
+      },
+    });
 
-  const payload = await response.json().catch(() => ({}));
+    const payload = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
-    throw new BadRequestError("Failed to fetch table statuses from Toast API");
+    if (!response.ok) {
+      throw new BadRequestError("Failed to fetch table statuses from Toast API");
+    }
+
+    const rawItems = readByPath(payload, responsePath);
+    const updates = toUpdates(rawItems, tableIdKey, statusKey);
+
+    if (!updates.length) {
+      throw new BadRequestError(
+        "No mappable table statuses returned by Toast API",
+      );
+    }
+
+    return updates;
+  } catch (err) {
+    if (DEMO_AUTH) {
+      return buildDemoUpdates();
+    }
+
+    throw err;
   }
-
-  const rawItems = readByPath(payload, responsePath);
-  const updates = toUpdates(rawItems, tableIdKey, statusKey);
-
-  if (!updates.length) {
-    throw new BadRequestError(
-      "No mappable table statuses returned by Toast API",
-    );
-  }
-
-  return updates;
 };
 
 const fetchToastFloorplan = async () => {
@@ -298,6 +348,10 @@ const fetchToastFloorplan = async () => {
     restaurantGuid = "",
   } = credentials;
 
+  if (DEMO_AUTH && isPlaceholderGuid(restaurantGuid)) {
+    return buildDemoFloorplan();
+  }
+
   if (!clientId || !clientSecret) {
     throw new BadRequestError(
       "Toast credentials are missing clientId or clientSecret",
@@ -308,46 +362,54 @@ const fetchToastFloorplan = async () => {
     throw new BadRequestError("Toast credentials must include tablesUrl");
   }
 
-  const accessToken = await getToastAccessToken(credentials);
-  const response = await fetch(tablesUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Toast-Restaurant-External-ID": restaurantGuid,
-      "Content-Type": "application/json",
-    },
-  });
+  try {
+    const accessToken = await getToastAccessToken(credentials);
+    const response = await fetch(tablesUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Toast-Restaurant-External-ID": restaurantGuid,
+        "Content-Type": "application/json",
+      },
+    });
 
-  const payload = await response.json().catch(() => ({}));
+    const payload = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
-    throw new BadRequestError("Failed to fetch floorplan from Toast API");
+    if (!response.ok) {
+      throw new BadRequestError("Failed to fetch floorplan from Toast API");
+    }
+
+    const rawItems = readByPath(payload, responsePath);
+    const tables = toFloorplanTables(rawItems);
+
+    if (!tables.length) {
+      throw new BadRequestError("No table layout data returned by Toast API");
+    }
+
+    const withCoords = tables.filter(
+      (item) => Number.isFinite(item.x) && Number.isFinite(item.y),
+    );
+
+    const layoutTables = withCoords.length
+      ? withCoords
+      : tables.map((item, index) => ({
+          ...item,
+          x: 40 + (index % 5) * 120,
+          y: 40 + Math.floor(index / 5) * 90,
+        }));
+
+    return {
+      width: Math.max(...layoutTables.map((item) => item.x + item.width), 800),
+      height: Math.max(...layoutTables.map((item) => item.y + item.height), 520),
+      tables: layoutTables,
+    };
+  } catch (err) {
+    if (DEMO_AUTH) {
+      return buildDemoFloorplan();
+    }
+
+    throw err;
   }
-
-  const rawItems = readByPath(payload, responsePath);
-  const tables = toFloorplanTables(rawItems);
-
-  if (!tables.length) {
-    throw new BadRequestError("No table layout data returned by Toast API");
-  }
-
-  const withCoords = tables.filter(
-    (item) => Number.isFinite(item.x) && Number.isFinite(item.y),
-  );
-
-  const layoutTables = withCoords.length
-    ? withCoords
-    : tables.map((item, index) => ({
-        ...item,
-        x: 40 + (index % 5) * 120,
-        y: 40 + Math.floor(index / 5) * 90,
-      }));
-
-  return {
-    width: Math.max(...layoutTables.map((item) => item.x + item.width), 800),
-    height: Math.max(...layoutTables.map((item) => item.y + item.height), 520),
-    tables: layoutTables,
-  };
 };
 
 module.exports = {

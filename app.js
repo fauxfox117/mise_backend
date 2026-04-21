@@ -20,6 +20,8 @@ const {
   CORS_ORIGIN = "http://localhost:3000",
 } = process.env;
 
+const listenPort = Number(PORT) || 3001;
+
 const corsOrigins = CORS_ORIGIN.split(",").map((origin) => origin.trim());
 
 mongoose.connect(MONGODB_URI);
@@ -54,7 +56,7 @@ const server = http.createServer(app);
 
 initSocketServer(server, corsOrigins);
 
-server.listen(PORT, () => {
+server.listen(listenPort, () => {
   // eslint-disable-next-line no-console
-  console.log(`Mise backend listening on port ${PORT}`);
+  console.log(`Mise backend listening on port ${listenPort}`);
 });
