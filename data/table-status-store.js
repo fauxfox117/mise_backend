@@ -10,11 +10,26 @@ const ALLOWED_STATUSES = [
   "dessert",
 ];
 
-const tableStatuses = new Map([
+const {
+  getCustomFloorplanSeedStatuses,
+  loadCustomFloorplanSync,
+} = require("../utils/custom-floorplan");
+
+const defaultTableStatuses = [
   ["T1", "open"],
   ["T2", "occupied"],
   ["T3", "reserved"],
-]);
+];
+
+const customFloorplanStatuses = getCustomFloorplanSeedStatuses(
+  loadCustomFloorplanSync(),
+);
+
+const tableStatuses = new Map(
+  customFloorplanStatuses.length
+    ? customFloorplanStatuses.map((table) => [table.tableId, table.status])
+    : defaultTableStatuses,
+);
 
 const getAllTableStatuses = () =>
   Array.from(tableStatuses.entries()).map(([tableId, status]) => ({

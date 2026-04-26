@@ -24,7 +24,12 @@ const listenPort = Number(PORT) || 3001;
 
 const corsOrigins = CORS_ORIGIN.split(",").map((origin) => origin.trim());
 
-mongoose.connect(MONGODB_URI);
+mongoose
+  .connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 })
+  // eslint-disable-next-line no-console
+  .then(() => console.log("MongoDB connected"))
+  // eslint-disable-next-line no-console
+  .catch((err) => console.error("MongoDB connection error:", err.message));
 
 app.use(
   cors({

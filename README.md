@@ -92,6 +92,16 @@ Setup:
 
 This file is gitignored so local API secrets stay out of source control.
 
+## Custom Demo Floorplan
+
+If Toast floorplan APIs are unavailable for your account, you can serve a hand-authored layout in demo mode.
+
+1. Copy config/custom-floorplan.example.json to config/custom-floorplan.json
+2. Replace the sample tables with your own table IDs, labels, positions, sizes, and sections
+3. Set DEMO_AUTH=true so the backend will fall back to the custom floorplan file
+
+The backend reads config/custom-floorplan.json automatically if present and uses those table IDs to seed in-memory statuses.
+
 ## Realtime Flow
 
 - webhook events and sync responses are normalized to internal table statuses

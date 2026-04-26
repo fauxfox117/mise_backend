@@ -2,6 +2,7 @@ const BadRequestError = require("../errors/bad-request-err");
 const { loadToastCredentials } = require("./toast-credentials");
 const { DEMO_AUTH } = require("./config");
 const { getAllTableStatuses } = require("../data/table-status-store");
+const { loadCustomFloorplanSync } = require("./custom-floorplan");
 
 const STATUS_MAP = {
   AVAILABLE: "open",
@@ -128,6 +129,33 @@ const toUpdates = (rawItems, tableIdKey, statusKey) => {
     .filter(Boolean);
 };
 
+const toUpdatesWithExistingFallback = (rawItems, tableIdKey) => {
+  if (!Array.isArray(rawItems)) {
+    return [];
+  }
+
+  const currentStatusMap = new Map(
+    getAllTableStatuses().map((table) => [String(table.tableId), table.status]),
+  );
+
+  return rawItems
+    .map((item) => {
+      const tableId = item?.[tableIdKey];
+
+      if (!tableId) {
+        return null;
+      }
+
+      const normalizedTableId = String(tableId);
+      return {
+        tableId: normalizedTableId,
+        status:
+          normalizeStatus(currentStatusMap.get(normalizedTableId)) || "open",
+      };
+    })
+    .filter(Boolean);
+};
+
 const toNumber = (value) => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -220,6 +248,22 @@ const buildDemoUpdates = () =>
   }));
 
 const buildDemoFloorplan = () => {
+  const statusMap = new Map(
+    getAllTableStatuses().map((table) => [String(table.tableId), table.status]),
+  );
+  const customFloorplan = loadCustomFloorplanSync();
+
+  if (customFloorplan?.tables?.length) {
+    return {
+      ...customFloorplan,
+      tables: customFloorplan.tables.map((table) => ({
+        ...table,
+        status:
+          normalizeStatus(statusMap.get(String(table.tableId))) || table.status,
+      })),
+    };
+  }
+
   const demoTables = getAllTableStatuses().map((table, index) => ({
     tableId: String(table.tableId),
     label: String(table.tableId),
@@ -316,19 +360,27 @@ const fetchToastTableUpdates = async () => {
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new BadRequestError("Failed to fetch table statuses from Toast API");
+      throw new BadRequestError(
+        "Failed to fetch table statuses from Toast API",
+      );
     }
 
     const rawItems = readByPath(payload, responsePath);
     const updates = toUpdates(rawItems, tableIdKey, statusKey);
 
-    if (!updates.length) {
+    if (updates.length) {
+      return updates;
+    }
+
+    const inferredUpdates = toUpdatesWithExistingFallback(rawItems, tableIdKey);
+
+    if (!inferredUpdates.length) {
       throw new BadRequestError(
         "No mappable table statuses returned by Toast API",
       );
     }
 
-    return updates;
+    return inferredUpdates;
   } catch (err) {
     if (DEMO_AUTH) {
       return buildDemoUpdates();
@@ -400,7 +452,10 @@ const fetchToastFloorplan = async () => {
 
     return {
       width: Math.max(...layoutTables.map((item) => item.x + item.width), 800),
-      height: Math.max(...layoutTables.map((item) => item.y + item.height), 520),
+      height: Math.max(
+        ...layoutTables.map((item) => item.y + item.height),
+        520,
+      ),
       tables: layoutTables,
     };
   } catch (err) {

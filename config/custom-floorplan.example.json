@@ -1,0 +1,72 @@
+{
+  "width": 1120,
+  "height": 700,
+  "tables": [
+    {
+      "tableId": "12",
+      "label": "12",
+      "status": "open",
+      "x": 80,
+      "y": 80,
+      "width": 104,
+      "height": 72,
+      "shape": "rectangle",
+      "section": "Patio"
+    },
+    {
+      "tableId": "14",
+      "label": "14",
+      "status": "occupied",
+      "x": 220,
+      "y": 80,
+      "width": 104,
+      "height": 72,
+      "shape": "rectangle",
+      "section": "Patio"
+    },
+    {
+      "tableId": "21",
+      "label": "21",
+      "status": "reserved",
+      "x": 420,
+      "y": 210,
+      "width": 96,
+      "height": 96,
+      "shape": "circle",
+      "section": "Main Dining"
+    },
+    {
+      "tableId": "22",
+      "label": "22",
+      "status": "open",
+      "x": 560,
+      "y": 210,
+      "width": 96,
+      "height": 96,
+      "shape": "circle",
+      "section": "Main Dining"
+    },
+    {
+      "tableId": "31",
+      "label": "31",
+      "status": "dirty",
+      "x": 790,
+      "y": 140,
+      "width": 128,
+      "height": 80,
+      "shape": "rectangle",
+      "section": "Bar"
+    },
+    {
+      "tableId": "32",
+      "label": "32",
+      "status": "drinks/bread",
+      "x": 790,
+      "y": 260,
+      "width": 128,
+      "height": 80,
+      "shape": "rectangle",
+      "section": "Bar"
+    }
+  ]
+}
