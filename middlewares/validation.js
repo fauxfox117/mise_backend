@@ -16,7 +16,6 @@ const validateUserBody = celebrate({
       .required()
       .email({ tlds: { allow: false } }),
     password: Joi.string().required().min(6),
-    avatar: Joi.string().custom(validateURL),
   }),
 });
 

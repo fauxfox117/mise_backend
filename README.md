@@ -20,7 +20,32 @@ reduce manual status updates for servers while improving host visibility of true
 - JWT authentication
 - Socket.IO for realtime events
 - Celebrate and Joi for validation
-- Winston request and error logging
+- Morgan request logging with file-based error logging middleware
+
+## Logging Note
+
+This project previously used express-winston and winston.
+
+On Node 22, requiring winston/express-winston caused the backend process to hang during startup.
+
+To keep startup stable on Node 22, logging was switched to morgan for request logs plus a lightweight file-based error logger middleware.
+
+If you plan to switch back to express-winston, use Node 20 LTS and re-test startup behavior first.
+
+## Deployed Backend
+
+Production API base URL:
+
+- https://mise.saucedchicago.com
+
+Production Socket.IO endpoint:
+
+- https://mise.saucedchicago.com
+
+For frontend deployments, set:
+
+- VITE_API_URL=https://mise.saucedchicago.com
+- VITE_WS_URL=https://mise.saucedchicago.com
 
 ## Scripts
 
@@ -65,6 +90,11 @@ In demo mode:
 - DEMO_USER_ID
 
 ## API Endpoints
+
+Base URL:
+
+- local: http://localhost:3001
+- production: https://mise.saucedchicago.com
 
 Public:
 

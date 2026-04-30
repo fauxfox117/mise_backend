@@ -20,16 +20,6 @@ const userSchema = new mongoose.Schema({
       message: "You must enter a valid email",
     },
   },
-  avatar: {
-    type: String,
-    default: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e",
-    validate: {
-      validator(url) {
-        return validator.isURL(url);
-      },
-      message: "You must enter a valid URL",
-    },
-  },
   password: {
     type: String,
     required: true,

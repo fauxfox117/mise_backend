@@ -4,12 +4,12 @@ const path = require("path");
 
 const requestLogStream = fs.createWriteStream(
   path.join(__dirname, "../request.log"),
-  { flags: "a" }
+  { flags: "a" },
 );
 
 const errorLogStream = fs.createWriteStream(
   path.join(__dirname, "../error.log"),
-  { flags: "a" }
+  { flags: "a" },
 );
 
 const requestLogger = morgan("combined", { stream: requestLogStream });

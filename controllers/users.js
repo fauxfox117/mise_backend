@@ -8,9 +8,9 @@ const NotFoundError = require("../errors/not-found-err");
 const BadRequestError = require("../errors/bad-request-err");
 
 const createUser = (req, res, next) => {
-  const { name, avatar, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-  User.create({ name, avatar, email, password })
+  User.create({ name, email, password })
     .then((user) => {
       const userObject = user.toObject();
       delete userObject.password;
