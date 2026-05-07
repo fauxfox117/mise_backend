@@ -67,7 +67,6 @@ const getCurrentUser = (req, res, next) => {
       _id: DEMO_USER_ID,
       name: "Demo User",
       email: "demo@mise.local",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e",
     });
   }
 

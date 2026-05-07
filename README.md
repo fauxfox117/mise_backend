@@ -38,6 +38,10 @@ Production API base URL:
 
 - https://mise.saucedchicago.com
 
+Production frontend URL:
+
+- https://fauxfox117.github.io/mise_frontend/#/
+
 Production Socket.IO endpoint:
 
 - https://mise.saucedchicago.com
