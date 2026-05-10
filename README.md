@@ -34,22 +34,11 @@ If you plan to switch back to express-winston, use Node 20 LTS and re-test start
 
 ## Deployed Backend
 
-Production API base URL:
-
-- https://mise.saucedchicago.com
-
 Production frontend URL:
 
 - https://fauxfox117.github.io/mise_frontend/#/
 
-Production Socket.IO endpoint:
-
-- https://mise.saucedchicago.com
-
-For frontend deployments, set:
-
-- VITE_API_URL=https://mise.saucedchicago.com
-- VITE_WS_URL=https://mise.saucedchicago.com
+For project review, use the frontend URL above.
 
 ## Scripts
 
@@ -98,7 +87,7 @@ In demo mode:
 Base URL:
 
 - local: http://localhost:3001
-- production: https://mise.saucedchicago.com
+- production: configured in deployment environment
 
 Public:
 
